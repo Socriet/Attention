@@ -1,8 +1,21 @@
+import os
 import sys
-import tensorflow as tf
+import logging
+from datetime import datetime
+from pathlib import Path
 
+# Silence oneDNN initialization message and TensorFlow C++ logs
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+# Import libraries after setting environment variables
+import tensorflow as tf
 from PIL import Image, ImageDraw, ImageFont
 from transformers import AutoTokenizer, TFBertForMaskedLM
+
+# Silence Python-level logging from TensorFlow and Transformers
+tf.get_logger().setLevel(logging.ERROR)
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 # Pre-trained masked language model
 MODEL = "bert-base-uncased"
@@ -10,8 +23,15 @@ MODEL = "bert-base-uncased"
 # Number of predictions to generate
 K = 3
 
-# Constants for generating attention diagrams
-FONT = ImageFont.truetype("assets/fonts/OpenSans-Regular.ttf", 28)
+# Resolve base project directory relative to mask.py
+BASE_DIR = Path(__file__).resolve().parent
+FONT_PATH = BASE_DIR / "assets" / "fonts" / "OpenSans-Regular.ttf"
+
+if FONT_PATH.exists():
+    FONT = ImageFont.truetype(str(FONT_PATH), 28)
+else:
+    FONT = ImageFont.load_default()
+
 GRID_SIZE = 40
 PIXELS_PER_WORD = 200
 
@@ -73,6 +93,12 @@ def visualize_attentions(tokens, attentions):
     include both the layer number (starting count from 1) and head number
     (starting count from 1).
     """
+    # Create timestamped subfolder inside an 'outputs' folder within the project folder
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_dir = BASE_DIR / "outputs" / timestamp
+    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Saving attention diagrams to: {output_dir}")
+
     for i, layer_attentions in enumerate(attentions):
         layer_number = i + 1
         num_heads = len(layer_attentions[0])
@@ -82,11 +108,12 @@ def visualize_attentions(tokens, attentions):
                 layer_number,
                 head_number,
                 tokens,
-                layer_attentions[0][k]
+                layer_attentions[0][k],
+                output_dir=output_dir
             )
 
 
-def generate_diagram(layer_number, head_number, tokens, attention_weights):
+def generate_diagram(layer_number, head_number, tokens, attention_weights, output_dir=None):
     """
     Generate a diagram representing the self-attention scores for a single
     attention head. The diagram shows one row and column for each of the
@@ -96,6 +123,9 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights):
     The diagram is saved with a filename that includes both the `layer_number`
     and `head_number`.
     """
+    if output_dir is None:
+        output_dir = BASE_DIR
+
     # Create new image
     image_size = GRID_SIZE * len(tokens) + PIXELS_PER_WORD
     img = Image.new("RGBA", (image_size, image_size), "black")
@@ -132,8 +162,9 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights):
             color = get_color_for_attention_score(attention_weights[i][j])
             draw.rectangle((x, y, x + GRID_SIZE, y + GRID_SIZE), fill=color)
 
-    # Save image
-    img.save(f"Attention_Layer{layer_number}_Head{head_number}.png")
+    # Save image inside the designated timestamped folder
+    save_path = Path(output_dir) / f"Attention_Layer{layer_number}_Head{head_number}.png"
+    img.save(save_path)
 
 
 if __name__ == "__main__":
