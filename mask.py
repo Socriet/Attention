@@ -1,28 +1,23 @@
 import os
 import sys
 import logging
+from datetime import datetime
 from pathlib import Path
 
-# Silence logs
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
 
 import tensorflow as tf
 from PIL import Image, ImageDraw, ImageFont
 from transformers import AutoTokenizer, TFBertForMaskedLM
 
-# Silence Python-level logging from TensorFlow and Transformers
 tf.get_logger().setLevel(logging.ERROR)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 
-# Pre-trained masked language model
 MODEL = "bert-base-uncased"
 
-# Number of predictions to generate
 K = 3
 
-# Resolve font path relative to mask.py's directory
 BASE_DIR = Path(__file__).resolve().parent
 FONT_PATH = BASE_DIR / "assets" / "fonts" / "OpenSans-Regular.ttf"
 
@@ -92,6 +87,12 @@ def visualize_attentions(tokens, attentions):
     include both the layer number (starting count from 1) and head number
     (starting count from 1).
     """
+    # Create subfolder 
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_dir = BASE_DIR / "outputs" / timestamp
+    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Saving attention diagrams to: {output_dir}")
+
     for i, layer_attentions in enumerate(attentions):
         layer_number = i + 1
         num_heads = len(layer_attentions[0])
@@ -101,11 +102,12 @@ def visualize_attentions(tokens, attentions):
                 layer_number,
                 head_number,
                 tokens,
-                layer_attentions[0][k]
+                layer_attentions[0][k],
+                output_dir=output_dir
             )
 
 
-def generate_diagram(layer_number, head_number, tokens, attention_weights):
+def generate_diagram(layer_number, head_number, tokens, attention_weights, output_dir=None):
     """
     Generate a diagram representing the self-attention scores for a single
     attention head. The diagram shows one row and column for each of the
@@ -115,6 +117,9 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights):
     The diagram is saved with a filename that includes both the `layer_number`
     and `head_number`.
     """
+    if output_dir is None:
+        output_dir = BASE_DIR
+
     # Create new image
     image_size = GRID_SIZE * len(tokens) + PIXELS_PER_WORD
     img = Image.new("RGBA", (image_size, image_size), "black")
@@ -122,7 +127,6 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights):
 
     # Draw each token onto the image
     for i, token in enumerate(tokens):
-        # Draw token columns
         token_image = Image.new("RGBA", (image_size, image_size), (0, 0, 0, 0))
         token_draw = ImageDraw.Draw(token_image)
         token_draw.text(
@@ -134,7 +138,6 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights):
         token_image = token_image.rotate(90)
         img.paste(token_image, mask=token_image)
 
-        # Draw token rows
         _, _, width, _ = draw.textbbox((0, 0), token, font=FONT)
         draw.text(
             (PIXELS_PER_WORD - width, PIXELS_PER_WORD + i * GRID_SIZE),
@@ -143,7 +146,6 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights):
             font=FONT
         )
 
-    # Draw each word
     for i in range(len(tokens)):
         y = PIXELS_PER_WORD + i * GRID_SIZE
         for j in range(len(tokens)):
@@ -152,7 +154,8 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights):
             draw.rectangle((x, y, x + GRID_SIZE, y + GRID_SIZE), fill=color)
 
     # Save image
-    img.save(f"Attention_Layer{layer_number}_Head{head_number}.png")
+    save_path = Path(output_dir) / f"Attention_Layer{layer_number}_Head{head_number}.png"
+    img.save(save_path)
 
 
 if __name__ == "__main__":
