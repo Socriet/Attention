@@ -1,8 +1,20 @@
+import os
 import sys
-import tensorflow as tf
+import logging
+from pathlib import Path
 
+# Silence logs
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+
+import tensorflow as tf
 from PIL import Image, ImageDraw, ImageFont
 from transformers import AutoTokenizer, TFBertForMaskedLM
+
+# Silence Python-level logging from TensorFlow and Transformers
+tf.get_logger().setLevel(logging.ERROR)
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 # Pre-trained masked language model
 MODEL = "bert-base-uncased"
@@ -10,8 +22,15 @@ MODEL = "bert-base-uncased"
 # Number of predictions to generate
 K = 3
 
-# Constants for generating attention diagrams
-FONT = ImageFont.truetype("assets/fonts/OpenSans-Regular.ttf", 28)
+# Resolve font path relative to mask.py's directory
+BASE_DIR = Path(__file__).resolve().parent
+FONT_PATH = BASE_DIR / "assets" / "fonts" / "OpenSans-Regular.ttf"
+
+if FONT_PATH.exists():
+    FONT = ImageFont.truetype(str(FONT_PATH), 28)
+else:
+    FONT = ImageFont.load_default()
+
 GRID_SIZE = 40
 PIXELS_PER_WORD = 200
 
