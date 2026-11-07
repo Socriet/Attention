@@ -4,20 +4,26 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+# Silence oneDNN initialization message and TensorFlow C++ logs
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
+# Import libraries after setting environment variables
 import tensorflow as tf
 from PIL import Image, ImageDraw, ImageFont
 from transformers import AutoTokenizer, TFBertForMaskedLM
 
+# Silence Python-level logging from TensorFlow and Transformers
 tf.get_logger().setLevel(logging.ERROR)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 
+# Pre-trained masked language model
 MODEL = "bert-base-uncased"
 
+# Number of predictions to generate
 K = 3
 
+# Resolve base project directory relative to mask.py
 BASE_DIR = Path(__file__).resolve().parent
 FONT_PATH = BASE_DIR / "assets" / "fonts" / "OpenSans-Regular.ttf"
 
@@ -87,7 +93,7 @@ def visualize_attentions(tokens, attentions):
     include both the layer number (starting count from 1) and head number
     (starting count from 1).
     """
-    # Create subfolder 
+    # Create timestamped subfolder inside an 'outputs' folder within the project folder
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     output_dir = BASE_DIR / "outputs" / timestamp
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -127,6 +133,7 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights, outpu
 
     # Draw each token onto the image
     for i, token in enumerate(tokens):
+        # Draw token columns
         token_image = Image.new("RGBA", (image_size, image_size), (0, 0, 0, 0))
         token_draw = ImageDraw.Draw(token_image)
         token_draw.text(
@@ -138,6 +145,7 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights, outpu
         token_image = token_image.rotate(90)
         img.paste(token_image, mask=token_image)
 
+        # Draw token rows
         _, _, width, _ = draw.textbbox((0, 0), token, font=FONT)
         draw.text(
             (PIXELS_PER_WORD - width, PIXELS_PER_WORD + i * GRID_SIZE),
@@ -146,6 +154,7 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights, outpu
             font=FONT
         )
 
+    # Draw each word
     for i in range(len(tokens)):
         y = PIXELS_PER_WORD + i * GRID_SIZE
         for j in range(len(tokens)):
@@ -153,7 +162,7 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights, outpu
             color = get_color_for_attention_score(attention_weights[i][j])
             draw.rectangle((x, y, x + GRID_SIZE, y + GRID_SIZE), fill=color)
 
-    # Save image
+    # Save image inside the designated timestamped folder
     save_path = Path(output_dir) / f"Attention_Layer{layer_number}_Head{head_number}.png"
     img.save(save_path)
 
