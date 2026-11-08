@@ -79,7 +79,7 @@ python ui.py
 | Tool | Used for |
 |---|---|
 | Claude (Anthropic) | Developing the Attention Explorer UI (`ui.py`), guidance on removing the unwanted extra terminal output (TensorFlow/oneDNN and `transformers` logs), guidance on the Git workflow (branches and conventional commits), and drafting this README |
-| Gemini (Google) | Developing this README, general debugging |
+| Gemini (Google) | Developing this README and FEATURE .md files, general debugging |
 
 All AI-generated code was reviewed, run and tested by me before being committed.
 

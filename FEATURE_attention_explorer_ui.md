@@ -49,19 +49,3 @@ python ui.py
    image changes.
 5. Rename a run, then delete it, and check that the list updates.
 6. Run it with a sentence without `[MASK]` and check that a warning appears.
-
-## AI usage
-
-**Prompt:** The exact wording was not saved. The request was for a graphical
-interface to run `mask.py` and browse the generated attention diagrams.
-
-**Output (summary):** Claude produced `ui.py` with the features above.
-[FILL IN: any changes you made by hand afterwards.]
-
-## Limitations
-
-- The layer and head ranges are fixed at 12, which matches `bert-base-uncased`.
-- Deleting a run is permanent, although the UI asks for confirmation first.
-- Opening the file explorer uses `os.startfile` on Windows, `open` on macOS and
-  `xdg-open` on Linux.
-- [FILL IN: add a screenshot, e.g. `docs/ui.png`.]

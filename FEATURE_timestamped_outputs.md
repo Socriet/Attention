@@ -2,7 +2,6 @@
 
 **Branch:** `feature/timestamped-outputs`
 **Type:** Simple feature
-**Developed with:** [FILL IN: AI tool used, e.g. Claude]
 
 ## What it does
 
@@ -42,17 +41,3 @@ Check that:
 2. That folder contains 144 files named `Attention_Layer{N}_Head{M}.png`.
 3. Running the program a second time creates a second folder and leaves the
    first one untouched.
-
-## AI usage
-
-**Prompt:** [FILL IN the real prompt, or: The exact wording was not saved. The
-request was to save each run's diagrams in a separate timestamped folder.]
-
-**Output (summary):** the `datetime`-based folder creation in
-`visualize_attentions` and the `output_dir` parameter in `generate_diagram`.
-
-## Limitations
-
-- The folder is created next to `mask.py`, not in the current directory.
-- Diagrams are no longer written to the working directory. [FILL IN: note the
-  result of running `check50` with this change.]

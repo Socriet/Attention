@@ -1,29 +1,29 @@
 import os
 import sys
 import logging
+import warnings
 from datetime import datetime
 from pathlib import Path
 
-# Silence oneDNN initialization message and TensorFlow C++ logs
+# Silence oneDNN
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-# Import libraries after setting environment variables
-import tensorflow as tf
-from PIL import Image, ImageDraw, ImageFont
-from transformers import AutoTokenizer, TFBertForMaskedLM
+import tensorflow as tf  # noqa: E402
 
-# Silence Python-level logging from TensorFlow and Transformers
 tf.get_logger().setLevel(logging.ERROR)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+from PIL import Image, ImageDraw, ImageFont  # noqa: E402
+from transformers import AutoTokenizer, TFBertForMaskedLM  # noqa: E402
+
+# Silence Python
 logging.getLogger("transformers").setLevel(logging.ERROR)
 
-# Pre-trained masked language model
 MODEL = "bert-base-uncased"
 
-# Number of predictions to generate
 K = 3
 
-# Resolve base project directory relative to mask.py
 BASE_DIR = Path(__file__).resolve().parent
 FONT_PATH = BASE_DIR / "assets" / "fonts" / "OpenSans-Regular.ttf"
 
@@ -46,7 +46,7 @@ def main():
     if mask_token_index is None:
         sys.exit(f"Input must include mask token {tokenizer.mask_token}.")
 
-    # Use model to process input
+    # Use model
     model = TFBertForMaskedLM.from_pretrained(MODEL)
     result = model(**inputs, output_attentions=True)
 
@@ -93,7 +93,7 @@ def visualize_attentions(tokens, attentions):
     include both the layer number (starting count from 1) and head number
     (starting count from 1).
     """
-    # Create timestamped subfolder inside an 'outputs' folder within the project folder
+    # Create timestamped subfolder
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     output_dir = BASE_DIR / "outputs" / timestamp
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -162,7 +162,7 @@ def generate_diagram(layer_number, head_number, tokens, attention_weights, outpu
             color = get_color_for_attention_score(attention_weights[i][j])
             draw.rectangle((x, y, x + GRID_SIZE, y + GRID_SIZE), fill=color)
 
-    # Save image inside the designated timestamped folder
+    # Save image
     save_path = Path(output_dir) / f"Attention_Layer{layer_number}_Head{head_number}.png"
     img.save(save_path)
 
