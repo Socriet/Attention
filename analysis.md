@@ -1,17 +1,25 @@
 # Analysis
 
-## Layer 2, Head 1
+## Layer 2, Head 5
 
-This attention head appears to have learned to pay attention to the token that immediately precedes each token. For almost every token in the sequence, the brightest cell in its row corresponds to the previous token's column, establishing a backward-looking local context across the sequence.
-
-Example Sentences:
-- The [MASK] jumped over the lazy dog.
-- We walked across the [MASK] before sunset.
-
-## Layer 4, Head 2
-
-This attention head appears to pay attention to the relationship between adjectives and the nouns they modify. In particular, adjective tokens attend strongly to the subsequent noun tokens that they describe, helping the model associate descriptive properties with the appropriate entity.
+This attention head appears to pay attention to the previous token. Each
+token attends mostly to the token immediately before it, which shows up as a
+bright diagonal just below the main diagonal of the diagram. The first token,
+[CLS], has no previous token and attends to itself, and [SEP] attends to
+[CLS], so the pattern has small exceptions at the edges of the sentence.
 
 Example Sentences:
-- The bright [MASK] illuminated the dark alley.
-- She wore an elegant blue [MASK] to the dinner.
+- his [MASK] was unbelievable.
+- The quick brown fox jumped over the lazy [MASK].
+
+## Layer 3, Head 10
+
+This attention head appears to pay attention to the next token. Each token
+attends almost entirely to the token immediately after it, which shows up as
+a bright diagonal just above the main diagonal. This is a very clean pattern:
+for example, "his" attends to [MASK], and "was" attends to "unbelievable". The
+last token, [SEP], attends back to [CLS].
+
+Example Sentences:
+- his [MASK] was unbelievable.
+- The quick brown fox jumped over the lazy [MASK].

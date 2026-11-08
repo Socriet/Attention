@@ -16,8 +16,8 @@ attention diagrams without using the terminal.
   the system file explorer.
 - **Diagram viewer:** shows the diagram for any layer (1-12) and head (1-12),
   scaled to fit the window.
-- **Quick-jump buttons:** go straight to notable heads (Layer 2 Head 1,
-  Layer 4 Head 2, Layer 3 Head 10).
+- **Quick-jump buttons:** go straight to notable heads (Layer 2 Head 5
+  and Layer 3 Head 10).
 
 ## How it works
 

@@ -9,12 +9,10 @@ import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 from PIL import Image, ImageTk
 
-# Base Project Path
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUTS_DIR = BASE_DIR / "outputs"
 MASK_SCRIPT = BASE_DIR / "mask.py"
 
-# Try using customtkinter for modern UI styling, fallback to ttk
 try:
     import customtkinter as ctk
     ctk.set_appearance_mode("Dark")
@@ -43,10 +41,8 @@ class AttentionStudioApp(BaseWindow):
         self.geometry("1300x850")
         self.minsize(1050, 700)
 
-        # Ensure outputs folder exists
         OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
-        # State Variables
         self.selected_folder = None
         self.selected_layer = tk.IntVar(value=1)
         self.selected_head = tk.IntVar(value=1)
@@ -57,11 +53,11 @@ class AttentionStudioApp(BaseWindow):
         self.refresh_folder_list()
 
     def _build_ui(self):
-        # Master grid layout: 2 rows (Header bar, Main content)
+        # Master grid layout
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # ----------------- Top Execution Bar -----------------
+        # Top Execution Bar
         if USE_CTK:
             top_frame = ctk.CTkFrame(self, corner_radius=10)
         else:
@@ -82,13 +78,11 @@ class AttentionStudioApp(BaseWindow):
         self.status_label = BaseLabel(top_frame, text="Ready")
         self.status_label.grid(row=0, column=3, padx=10, pady=10)
 
-        # ----------------- Main Split View -----------------
-        # Left: Folder & Run Manager (weight 1)
-        # Right: Diagram Gallery & Image Viewer (weight 3)
+        # Main Split View 
         main_paned = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         main_paned.grid(row=1, column=0, sticky="nsew", padx=15, pady=(0, 15))
 
-        # === Left Column: Run Explorer ===
+        # Left Column
         left_container = BaseFrame(main_paned)
         main_paned.add(left_container, weight=1)
         left_container.grid_rowconfigure(1, weight=1)
@@ -133,7 +127,7 @@ class AttentionStudioApp(BaseWindow):
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.folder_listbox.config(yscrollcommand=scrollbar.set)
 
-        # Terminal / Run Log Box at bottom-left
+        # Terminal
         self.log_text = tk.Text(
             left_container, 
             height=7,
@@ -146,7 +140,7 @@ class AttentionStudioApp(BaseWindow):
         self.log_text.insert(tk.END, "Model inference logs will appear here...\n")
         self.log_text.config(state=tk.DISABLED)
 
-        # === Right Column: Attention Matrix Viewer ===
+        # Right Column
         right_container = BaseFrame(main_paned)
         main_paned.add(right_container, weight=3)
         right_container.grid_rowconfigure(1, weight=1)
@@ -168,12 +162,9 @@ class AttentionStudioApp(BaseWindow):
         self.spin_head.pack(side=tk.LEFT, padx=(0, 15))
         self.spin_head.bind("<Return>", lambda e: self.update_image_display())
 
-        # Quick Jump Buttons for assignment notable heads
-        btn_quick1 = BaseButton(ctrl_frame, text="Prev Token (L2, H1)", command=lambda: self.jump_to(2, 1))
+        # Quick Jump Buttons
+        btn_quick1 = BaseButton(ctrl_frame, text="Prev Token (L2, H5)", command=lambda: self.jump_to(2, 5))
         btn_quick1.pack(side=tk.LEFT, padx=5)
-
-        btn_quick2 = BaseButton(ctrl_frame, text="Adjective-Noun (L4, H2)", command=lambda: self.jump_to(4, 2))
-        btn_quick2.pack(side=tk.LEFT, padx=5)
 
         btn_quick3 = BaseButton(ctrl_frame, text="Next Token (L3, H10)", command=lambda: self.jump_to(3, 10))
         btn_quick3.pack(side=tk.LEFT, padx=5)
@@ -187,7 +178,7 @@ class AttentionStudioApp(BaseWindow):
         self.image_info_lbl = BaseLabel(right_container, text="Select an output run to view attention maps.")
         self.image_info_lbl.grid(row=2, column=0, sticky="w", padx=15, pady=5)
 
-    # ----------------- Navigation & Display -----------------
+    # Navigation & Display
     def jump_to(self, layer, head):
         self.selected_layer.set(layer)
         self.selected_head.set(head)
@@ -200,7 +191,7 @@ class AttentionStudioApp(BaseWindow):
             return
 
         folders = [d for d in OUTPUTS_DIR.iterdir() if d.is_dir()]
-        # Sort folders by creation/modification time descending
+        # Sort folders
         folders.sort(key=lambda d: d.stat().st_mtime, reverse=True)
 
         for folder in folders:
@@ -266,7 +257,6 @@ class AttentionStudioApp(BaseWindow):
             return
 
         img_w, img_h = self.current_pil_image.size
-        # Maintain aspect ratio to fit inside canvas with padding
         scale = min((canvas_w - 20) / img_w, (canvas_h - 20) / img_h, 1.5)
         new_w = max(1, int(img_w * scale))
         new_h = max(1, int(img_h * scale))
@@ -277,7 +267,7 @@ class AttentionStudioApp(BaseWindow):
         self.image_canvas.delete("all")
         self.image_canvas.create_image(canvas_w // 2, canvas_h // 2, anchor=tk.CENTER, image=self.current_tk_image)
 
-    # ----------------- Folder Management Actions -----------------
+    # Folder Management Actions
     def rename_selected_folder(self):
         if not self.selected_folder or not self.selected_folder.exists():
             messagebox.showwarning("Rename Folder", "Please select a run folder first.")
@@ -336,7 +326,7 @@ class AttentionStudioApp(BaseWindow):
         else:
             subprocess.run(["xdg-open", str(target)])
 
-    # ----------------- Execution & Threading -----------------
+    # Execution & Threading
     def log_append(self, text):
         self.log_text.config(state=tk.NORMAL)
         self.log_text.insert(tk.END, text)
@@ -356,7 +346,7 @@ class AttentionStudioApp(BaseWindow):
         self.log_text.config(state=tk.DISABLED)
         self.log_append(f"Starting inference on: \"{sentence}\"\n")
 
-        # Run mask.py in a background daemon thread to keep UI completely responsive
+        # Run mask.py in background
         thread = threading.Thread(target=self._run_mask_process, args=(sentence,), daemon=True)
         thread.start()
 
@@ -364,7 +354,7 @@ class AttentionStudioApp(BaseWindow):
         python_executable = sys.executable
 
         try:
-            # Execute mask.py using the active python virtualenv and pipe input
+            # Execute mask.py
             process = subprocess.Popen(
                 [python_executable, str(MASK_SCRIPT)],
                 stdin=subprocess.PIPE,
@@ -374,10 +364,8 @@ class AttentionStudioApp(BaseWindow):
                 cwd=str(BASE_DIR)
             )
 
-            # Send prompt text followed by newline
             stdout, _ = process.communicate(input=sentence + "\n")
 
-            # Post results back on main thread
             self.after(0, self._on_run_finished, stdout, process.returncode)
 
         except Exception as e:
