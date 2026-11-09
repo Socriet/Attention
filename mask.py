@@ -5,14 +5,13 @@ import warnings
 from datetime import datetime
 from pathlib import Path
 
-# Silence oneDNN
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" #TensorFlow’s C++ INFO and warning messages
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0" # Silence oneDNN
 
 import tensorflow as tf  # noqa: E402
 
-tf.get_logger().setLevel(logging.ERROR)
-warnings.filterwarnings("ignore", category=FutureWarning)
+tf.get_logger().setLevel(logging.ERROR) # WARNING:tensorflow...
+warnings.filterwarnings("ignore", category=FutureWarning) #clean_up_tokenization_spaces
 
 from PIL import Image, ImageDraw, ImageFont  # noqa: E402
 from transformers import AutoTokenizer, TFBertForMaskedLM  # noqa: E402
